@@ -32,11 +32,14 @@ jobs:
           JAVA_HOME_FOUND="$(dirname "$(dirname "$(readlink -f "$(command -v javac)")")")"
           mkdir -p "$HOME/.config/godot"
           cat > "$HOME/.config/godot/editor_settings-4.6.tres" <<EOF
-          [gd_resource format=3]
+          [gd_resource type="EditorSettings" format=3]
 
           [resource]
           export/android/java_sdk_path = "$JAVA_HOME_FOUND"
           export/android/android_sdk_path = "$ANDROID_HOME"
+          export/android/debug_keystore = "/root/debug.keystore"
+          export/android/debug_keystore_user = "androiddebugkey"
+          export/android/debug_keystore_pass = "android"
           EOF
           echo "JAVA_HOME_FOUND=$JAVA_HOME_FOUND"
           ls -la "$HOME/.local/share/godot/export_templates/4.6.stable" | head
