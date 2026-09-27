@@ -85,7 +85,7 @@ jobs:
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
           script: |
-            set -euxo pipefail
+            set -eux
             mkdir -p runtime-test
             adb install -r build/forge-chance-sim.apk
             adb shell wm size 1080x1920
