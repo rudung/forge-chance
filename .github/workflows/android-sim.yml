@@ -70,6 +70,7 @@ jobs:
         run: |
           set -euxo pipefail
           sed -i 's/architectures\/x86_64=false/architectures\/x86_64=true/' export_presets.cfg
+          mkdir -p build
           keytool -genkeypair -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Forge Chance,C=KR"
           "$GODOT_BIN" --headless --path "$GITHUB_WORKSPACE" --import --quit
           "$GODOT_BIN" --headless --path "$GITHUB_WORKSPACE" --export-debug "Android Debug" build/forge-chance-sim.apk
