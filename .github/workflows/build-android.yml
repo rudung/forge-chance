@@ -21,6 +21,7 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
+          yes | sdkmanager --sdk_root="$ANDROID_HOME" "platform-tools" "platforms;android-35" "build-tools;35.0.1" >/dev/null
           mkdir -p "$HOME/.local/share/godot/export_templates"
           TEMPLATE_SRC="$(find /root/.local/share/godot/export_templates /opt /usr/local -type d -name '4.6.stable' 2>/dev/null | head -n 1 || true)"
           if [ -z "$TEMPLATE_SRC" ]; then
@@ -50,7 +51,7 @@ jobs:
       - name: Export debug APK
         run: |
           mkdir -p build
-          godot --headless --path "$GITHUB_WORKSPACE" --export-debug "Android Debug" build/forge-chance-v0.3.apk
+          godot --headless --verbose --path "$GITHUB_WORKSPACE" --export-debug "Android Debug" build/forge-chance-v0.3.apk
           test -s build/forge-chance-v0.3.apk
           ls -lh build/forge-chance-v0.3.apk
 
