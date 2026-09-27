@@ -67,6 +67,9 @@ var pending_is_coin := false
 var passive_fraction := 0.0
 var save_accumulator := 0.0
 var last_offline_gain := 0.0
+var sequence_kind := ""
+var sequence_elapsed := 0.0
+var result_hold := 0.0
 
 var main_layer: Control
 var background: TextureRect
@@ -111,12 +114,38 @@ func _ready() -> void:
     _save_game()
 
 func _process(delta: float) -> void:
+    if sequence_kind != "":
+        sequence_elapsed += delta
+        if sequence_kind == "normal":
+            progress_bar.visible = true
+            progress_bar.value = minf(100.0, sequence_elapsed / 4.0 * 100.0)
+            if sequence_elapsed >= 4.0:
+                sequence_kind = ""
+                progress_bar.visible = false
+                _apply_and_show_result(false)
+        elif sequence_kind == "coin":
+            if sequence_elapsed >= 2.4:
+                sequence_kind = ""
+                _apply_and_show_result(true)
+
+    if result_hold > 0.0:
+        result_hold -= delta
+        if result_hold <= 0.0:
+            result_panel.visible = false
+            fx.set_mode("idle")
+            status_label.text = ""
+            busy = false
+            _refresh_all()
+            _save_game()
+
     if not busy:
         gold += _total_gps() * delta
+
     passive_fraction += delta
     if passive_fraction >= 0.10:
         passive_fraction = 0.0
         _refresh_top_bar()
+
     save_accumulator += delta
     if save_accumulator >= 8.0:
         save_accumulator = 0.0
@@ -520,7 +549,7 @@ func _on_enhance_pressed() -> void:
     pending_is_coin = false
     _check_achievements()
     _save_game()
-    await _play_normal_enhancement()
+    _begin_normal_enhancement()
 
 func _on_coin_pressed() -> void:
     if busy:
@@ -559,7 +588,7 @@ func _confirm_coin_use() -> void:
     pending_slot = selected_slot
     pending_is_coin = true
     _save_game()
-    await _play_coin_enhancement()
+    _begin_coin_enhancement()
 
 func _roll_normal_result(level: int) -> String:
     var row = ENHANCE_TABLE[level]
@@ -574,34 +603,32 @@ func _roll_normal_result(level: int) -> String:
         return "down"
     return "destroy"
 
-func _play_normal_enhancement() -> void:
+func _begin_normal_enhancement() -> void:
     busy = true
+    enhance_button.release_focus()
+    coin_button.release_focus()
     _refresh_interaction_state()
     result_panel.visible = false
+    result_hold = 0.0
+    sequence_kind = "normal"
+    sequence_elapsed = 0.0
     status_label.text = "빛나는 기운이 장비로 모여듭니다..."
     fx.set_mode("charging")
     progress_bar.visible = true
-    progress_bar.value = 0
-    var t := create_tween()
-    t.tween_property(progress_bar, "value", 100.0, 4.0)
-    await t.finished
-    progress_bar.visible = false
-    await _apply_and_show_result(false)
-    busy = false
-    _refresh_all()
-    _save_game()
+    progress_bar.value = 0.0
 
-func _play_coin_enhancement() -> void:
+func _begin_coin_enhancement() -> void:
     busy = true
+    enhance_button.release_focus()
+    coin_button.release_focus()
     _refresh_interaction_state()
     result_panel.visible = false
+    result_hold = 0.0
+    sequence_kind = "coin"
+    sequence_elapsed = 0.0
     status_label.text = "행운의 동전이 모루 위로 떠오릅니다..."
     fx.set_mode("coin_spin")
-    await get_tree().create_timer(2.4).timeout
-    await _apply_and_show_result(true)
-    busy = false
-    _refresh_all()
-    _save_game()
+    progress_bar.visible = false
 
 func _apply_and_show_result(is_coin: bool) -> void:
     var c := pending_class
@@ -658,10 +685,7 @@ func _apply_and_show_result(is_coin: bool) -> void:
     _show_result(title, detail, mode)
     if mode == "destroy":
         _screen_shake()
-    await get_tree().create_timer(1.65 if not is_coin else 1.9).timeout
-    result_panel.visible = false
-    fx.set_mode("idle")
-    status_label.text = ""
+    result_hold = 1.9 if is_coin else 1.65
 
 func _resolve_pending_immediately() -> void:
     var c := clampi(pending_class, 0, CLASSES.size() - 1)
