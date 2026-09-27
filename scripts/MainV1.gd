@@ -137,6 +137,7 @@ func _process(delta: float) -> void:
             busy = false
             _refresh_all()
             _save_game()
+            print("ENHANCE_DONE level=", _selected_level(), " busy=", busy)
 
     if not busy:
         gold += _total_gps() * delta
@@ -605,6 +606,7 @@ func _roll_normal_result(level: int) -> String:
 
 func _begin_normal_enhancement() -> void:
     busy = true
+    print("ENHANCE_START normal class=", CLASSES[selected_class], " slot=", SLOTS[selected_slot], " level=", _selected_level())
     enhance_button.release_focus()
     coin_button.release_focus()
     _refresh_interaction_state()
@@ -619,6 +621,7 @@ func _begin_normal_enhancement() -> void:
 
 func _begin_coin_enhancement() -> void:
     busy = true
+    print("ENHANCE_START coin class=", CLASSES[selected_class], " slot=", SLOTS[selected_slot], " level=", _selected_level())
     enhance_button.release_focus()
     coin_button.release_focus()
     _refresh_interaction_state()
@@ -683,6 +686,7 @@ func _apply_and_show_result(is_coin: bool) -> void:
     _save_game()
     fx.set_mode(mode)
     _show_result(title, detail, mode)
+    print("ENHANCE_RESULT mode=", mode, " old=", old_level, " new=", new_level)
     if mode == "destroy":
         _screen_shake()
     result_hold = 1.9 if is_coin else 1.65
