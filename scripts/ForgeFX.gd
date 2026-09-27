@@ -51,7 +51,7 @@ func _draw() -> void:
     var ring_count := 5 if mode == "charging" else 3
     for i in range(ring_count):
         var r := 70.0 + float(i) * 50.0 + sin(phase * (1.8 + i * 0.15) + i) * 14.0
-        var alpha := max(0.08, 0.38 - float(i) * 0.055) * intensity
+        var alpha: float = maxf(0.08, 0.38 - float(i) * 0.055) * intensity
         draw_arc(c, r, phase * (0.7 + i * 0.08), phase * (0.7 + i * 0.08) + TAU * 0.74, 64, Color(fx_color.r, fx_color.g, fx_color.b, alpha), 5.0 + pulse * 2.0, true)
 
     var particle_count := 48 if mode == "charging" else 32
