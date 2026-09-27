@@ -21,13 +21,13 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Setup official Android SDK
-        uses: android-actions/setup-android@v3
-
       - name: Install Android SDK 35
         shell: bash
         run: |
-          yes | sdkmanager "platform-tools" "build-tools;35.0.1" "platforms;android-35" "cmdline-tools;latest" >/dev/null || true
+          set -eux
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          yes | sdkmanager --sdk_root="$ANDROID_HOME" --licenses >/dev/null || true
+          yes | sdkmanager --sdk_root="$ANDROID_HOME" "platform-tools" "build-tools;35.0.1" "platforms;android-35" >/dev/null || true
           test -x "$ANDROID_HOME/platform-tools/adb"
           test -x "$ANDROID_HOME/build-tools/35.0.1/apksigner"
 
