@@ -64,6 +64,12 @@ jobs:
       - name: Import and validate project
         run: $GODOT_BIN --headless --path "$GITHUB_WORKSPACE" --import --quit
 
+      - name: Run gameplay smoke test
+        shell: bash
+        run: |
+          set -euxo pipefail
+          "$GODOT_BIN" --headless --path "$GITHUB_WORKSPACE" --script res://tests/smoke.gd
+
       - name: Export debug APK
         env:
           GODOT_ANDROID_KEYSTORE_DEBUG_PATH: ${{ github.workspace }}/debug.keystore
