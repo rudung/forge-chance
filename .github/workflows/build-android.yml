@@ -55,7 +55,10 @@ jobs:
       - name: Export debug APK
         run: |
           mkdir -p build
-          godot --headless --verbose --path "$GITHUB_WORKSPACE" --export-debug "Android Debug" build/forge-chance-v0.3.apk
+          godot --headless --verbose --path "$GITHUB_WORKSPACE" --export-debug "Android Debug" build/forge-chance-v0.3-unsigned.apk
+          test -s build/forge-chance-v0.3-unsigned.apk
+          "$ANDROID_HOME/build-tools/35.0.1/apksigner" sign --ks /root/debug.keystore --ks-pass pass:android --ks-key-alias androiddebugkey --key-pass pass:android --out build/forge-chance-v0.3.apk build/forge-chance-v0.3-unsigned.apk
+          "$ANDROID_HOME/build-tools/35.0.1/apksigner" verify build/forge-chance-v0.3.apk
           test -s build/forge-chance-v0.3.apk
           ls -lh build/forge-chance-v0.3.apk
 
