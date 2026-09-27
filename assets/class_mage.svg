@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="220" height="150" viewBox="0 0 220 150" shape-rendering="crispEdges">
+<rect width="220" height="150" fill="#0b0908"/>
+<polygon points="110,18 67,66 153,66" fill="#254bb9"/><rect x="70" y="56" width="80" height="18" fill="#1f3d9c"/>
+<rect x="87" y="61" width="46" height="35" fill="#efb07a"/><rect x="92" y="69" width="8" height="8" fill="#17223d"/><rect x="120" y="69" width="8" height="8" fill="#17223d"/>
+<rect x="68" y="94" width="84" height="44" fill="#183d9b"/><rect x="82" y="105" width="56" height="26" fill="#285dcc"/>
+<rect x="163" y="40" width="7" height="90" fill="#9a6a32"/><circle cx="166" cy="35" r="17" fill="#2d7eff"/><circle cx="166" cy="35" r="8" fill="#bde8ff"/>
+</svg>

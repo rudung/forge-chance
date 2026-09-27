@@ -50,7 +50,7 @@ jobs:
           unzip -q /tmp/templates.tpz -d /tmp/godot_templates
           cp -a /tmp/godot_templates/templates/. "$HOME/.local/share/godot/export_templates/4.6.3.stable/"
           mkdir -p "$HOME/.config/godot"
-          cat > "$HOME/.config/godot/editor_settings-4.6.tres" <<EOF
+          cat > "$HOME/.config/godot/editor_settings-4.6.tres" <<EOT
           [gd_resource type="EditorSettings" format=3]
 
           [resource]
@@ -59,14 +59,14 @@ jobs:
           export/android/debug_keystore = "$GITHUB_WORKSPACE/debug.keystore"
           export/android/debug_keystore_user = "androiddebugkey"
           export/android/debug_keystore_pass = "android"
-          EOF
+          EOT
 
       - name: Import and validate project
         run: $GODOT_BIN --headless --path "$GITHUB_WORKSPACE" --import --quit
 
       - name: Export debug APK
         env:
-          GODOT_ANDROID_KEYSTORE_DEBUG_PATH: ${{ github.workspace }}/debug.keystore
+          GODOT_ANDROID_KEYSTORE_DEBUG_PATH: \${{ github.workspace }}/debug.keystore
           GODOT_ANDROID_KEYSTORE_DEBUG_USER: androiddebugkey
           GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD: android
         shell: bash
@@ -74,14 +74,14 @@ jobs:
           set -euxo pipefail
           keytool -genkeypair -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Forge Chance,C=KR"
           mkdir -p build
-          "$GODOT_BIN" --headless --verbose --path "$GITHUB_WORKSPACE" --export-debug "Android Debug" build/forge-chance-v0.3.apk
-          test -s build/forge-chance-v0.3.apk
-          "$ANDROID_HOME/build-tools/35.0.1/apksigner" verify build/forge-chance-v0.3.apk
-          ls -lh build/forge-chance-v0.3.apk
+          "$GODOT_BIN" --headless --verbose --path "$GITHUB_WORKSPACE" --export-debug "Android Debug" build/forge-chance-v1.0.apk
+          test -s build/forge-chance-v1.0.apk
+          "$ANDROID_HOME/build-tools/35.0.1/apksigner" verify build/forge-chance-v1.0.apk
+          ls -lh build/forge-chance-v1.0.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: forge-chance-android-v0.3
-          path: build/forge-chance-v0.3.apk
+          name: forge-chance-android-v1.0
+          path: build/forge-chance-v1.0.apk
           if-no-files-found: error
