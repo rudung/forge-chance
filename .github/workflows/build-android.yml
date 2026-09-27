@@ -1,0 +1,35 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    container:
+      image: barichello/godot-ci:4.6
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Import project
+        run: godot --headless --path "$GITHUB_WORKSPACE" --import --quit
+
+      - name: Export debug APK
+        run: |
+          mkdir -p build
+          godot --headless --path "$GITHUB_WORKSPACE" --export-debug "Android Debug" build/forge-chance-v0.3.apk
+          test -s build/forge-chance-v0.3.apk
+          ls -lh build/forge-chance-v0.3.apk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: forge-chance-android-v0.3
+          path: build/forge-chance-v0.3.apk
+          if-no-files-found: error
