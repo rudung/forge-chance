@@ -12,7 +12,7 @@ jobs:
   android:
     runs-on: ubuntu-latest
     container:
-      image: barichello/godot-ci:4.6
+      image: barichello/godot-ci:4.6.3
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -27,13 +27,13 @@ jobs:
           test -d "$ANDROID_HOME/platforms/android-35"
           test -d "$ANDROID_HOME/build-tools/35.0.1"
           mkdir -p "$HOME/.local/share/godot/export_templates"
-          TEMPLATE_SRC="$(find /root/.local/share/godot/export_templates /opt /usr/local -type d -name '4.6.stable' 2>/dev/null | head -n 1 || true)"
+          TEMPLATE_SRC="$(find /root/.local/share/godot/export_templates /opt /usr/local -type d -name '4.6.3.stable' 2>/dev/null | head -n 1 || true)"
           if [ -z "$TEMPLATE_SRC" ]; then
-            echo "Godot 4.6 export templates not found"
+            echo "Godot 4.6.3 export templates not found"
             find / -type f -name android_debug.apk 2>/dev/null | head -n 20
             exit 1
           fi
-          cp -a "$TEMPLATE_SRC" "$HOME/.local/share/godot/export_templates/4.6.stable"
+          cp -a "$TEMPLATE_SRC" "$HOME/.local/share/godot/export_templates/4.6.3.stable"
           JAVA_HOME_FOUND="$(dirname "$(dirname "$(readlink -f "$(command -v javac)")")")"
           mkdir -p "$HOME/.config/godot"
           cat > "$HOME/.config/godot/editor_settings-4.6.tres" <<EOF
@@ -47,7 +47,7 @@ jobs:
           export/android/debug_keystore_pass = "android"
           EOF
           echo "JAVA_HOME_FOUND=$JAVA_HOME_FOUND"
-          ls -la "$HOME/.local/share/godot/export_templates/4.6.stable" | head
+          ls -la "$HOME/.local/share/godot/export_templates/4.6.3.stable" | head
 
       - name: Import and validate project
         run: godot --headless --path "$GITHUB_WORKSPACE" --import --quit
