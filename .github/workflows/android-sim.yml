@@ -91,7 +91,7 @@ jobs:
             adb shell wm size 1080x1920
             adb shell monkey -p com.rudung.forgechance 1
             sleep 4
-            adb shell input tap 806 430
+            adb shell input tap 925 500
             sleep 2
             adb exec-out screencap -p > runtime-test/00_before.png
             adb logcat -c
