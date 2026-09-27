@@ -82,7 +82,7 @@ func _ready() -> void:
 func _process(delta: float) -> void:
     passive_accumulator += delta
     if passive_accumulator >= 1.0:
-        var seconds := floor(passive_accumulator)
+        var seconds: float = floor(passive_accumulator)
         passive_accumulator -= seconds
         gold += _total_hourly_income() * seconds / 3600.0
         _refresh_top_bar()
@@ -233,7 +233,7 @@ func _on_enhance_pressed() -> void:
     if lv >= MAX_LEVEL:
         _flash("+20 장비는 이미 졸업했습니다.")
         return
-    var cost := ENHANCE_COST[lv]
+    var cost: int = int(ENHANCE_COST[lv])
     if gold < cost:
         _flash("골드가 부족합니다. 필요: %sG" % _fmt(cost))
         return
@@ -254,7 +254,7 @@ func _on_coin_pressed() -> void:
     var lv := int(anvil_item.level)
     if lv >= MAX_LEVEL:
         return
-    var cost := ENHANCE_COST[lv]
+    var cost: int = int(ENHANCE_COST[lv])
     if gold < cost:
         _flash("동전 강화도 정상 강화비가 필요합니다: %sG" % _fmt(cost))
         return
@@ -554,7 +554,7 @@ func _load_game() -> void:
             if typeof(item) == TYPE_DICTIONARY:
                 bag.append(_duplicate_item(item))
     var last_saved := float(parsed.get("last_saved_unix",Time.get_unix_time_from_system()))
-    var offline_seconds := clamp(Time.get_unix_time_from_system()-last_saved,0.0,MAX_OFFLINE_SECONDS)
+    var offline_seconds: float = float(clamp(Time.get_unix_time_from_system()-last_saved,0.0,MAX_OFFLINE_SECONDS))
     if offline_seconds > 2.0:
         last_offline_gain = _total_hourly_income() * offline_seconds / 3600.0
         gold += last_offline_gain
