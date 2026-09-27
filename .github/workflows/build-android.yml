@@ -21,7 +21,11 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
+          set +o pipefail
           yes | sdkmanager --sdk_root="$ANDROID_HOME" "platform-tools" "platforms;android-35" "build-tools;35.0.1" >/dev/null
+          set -o pipefail
+          test -d "$ANDROID_HOME/platforms/android-35"
+          test -d "$ANDROID_HOME/build-tools/35.0.1"
           mkdir -p "$HOME/.local/share/godot/export_templates"
           TEMPLATE_SRC="$(find /root/.local/share/godot/export_templates /opt /usr/local -type d -name '4.6.stable' 2>/dev/null | head -n 1 || true)"
           if [ -z "$TEMPLATE_SRC" ]; then
