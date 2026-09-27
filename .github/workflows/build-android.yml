@@ -11,55 +11,62 @@ permissions:
 jobs:
   android:
     runs-on: ubuntu-latest
-    container:
-      image: barichello/godot-ci:4.6.3
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Prepare Godot Android environment
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup official Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK 35
+        shell: bash
+        run: |
+          yes | sdkmanager "platform-tools" "build-tools;35.0.1" "platforms;android-35" "cmdline-tools;latest" >/dev/null || true
+          test -x "$ANDROID_HOME/platform-tools/adb"
+          test -x "$ANDROID_HOME/build-tools/35.0.1/apksigner"
+
+      - name: Install Godot 4.6.3 and export templates
         shell: bash
         run: |
           set -euxo pipefail
-          set +o pipefail
-          yes | sdkmanager --sdk_root="$ANDROID_HOME" "platform-tools" "platforms;android-35" "build-tools;35.0.1" >/dev/null
-          set -o pipefail
-          test -d "$ANDROID_HOME/platforms/android-35"
-          test -d "$ANDROID_HOME/build-tools/35.0.1"
-          mkdir -p "$HOME/.local/share/godot/export_templates"
-          TEMPLATE_SRC="$(find /root/.local/share/godot/export_templates /opt /usr/local -type d -name '4.6.3.stable' 2>/dev/null | head -n 1 || true)"
-          if [ -z "$TEMPLATE_SRC" ]; then
-            echo "Godot 4.6.3 export templates not found"
-            find / -type f -name android_debug.apk 2>/dev/null | head -n 20
-            exit 1
-          fi
-          cp -a "$TEMPLATE_SRC" "$HOME/.local/share/godot/export_templates/4.6.3.stable"
-          JAVA_HOME_FOUND="$(dirname "$(dirname "$(readlink -f "$(command -v javac)")")")"
+          mkdir -p "$HOME/godot" "$HOME/.local/share/godot/export_templates/4.6.3.stable"
+          curl -L --fail --retry 3 "https://github.com/godotengine/godot/releases/download/4.6.3-stable/Godot_v4.6.3-stable_linux.x86_64.zip" -o /tmp/godot.zip
+          unzip -q /tmp/godot.zip -d "$HOME/godot"
+          GODOT_BIN="$(find "$HOME/godot" -maxdepth 1 -type f -name 'Godot*' | head -n 1)"
+          chmod +x "$GODOT_BIN"
+          echo "GODOT_BIN=$GODOT_BIN" >> "$GITHUB_ENV"
+          curl -L --fail --retry 3 "https://github.com/godotengine/godot/releases/download/4.6.3-stable/Godot_v4.6.3-stable_export_templates.tpz" -o /tmp/templates.tpz
+          unzip -q /tmp/templates.tpz -d /tmp/godot_templates
+          cp -a /tmp/godot_templates/templates/. "$HOME/.local/share/godot/export_templates/4.6.3.stable/"
           mkdir -p "$HOME/.config/godot"
           cat > "$HOME/.config/godot/editor_settings-4.6.tres" <<EOF
           [gd_resource type="EditorSettings" format=3]
 
           [resource]
-          export/android/java_sdk_path = "$JAVA_HOME_FOUND"
+          export/android/java_sdk_path = "$JAVA_HOME"
           export/android/android_sdk_path = "$ANDROID_HOME"
-          export/android/debug_keystore = "/root/debug.keystore"
-          export/android/debug_keystore_user = "androiddebugkey"
-          export/android/debug_keystore_pass = "android"
           EOF
-          echo "JAVA_HOME_FOUND=$JAVA_HOME_FOUND"
-          ls -la "$HOME/.local/share/godot/export_templates/4.6.3.stable" | head
 
       - name: Import and validate project
-        run: godot --headless --path "$GITHUB_WORKSPACE" --import --quit
+        run: $GODOT_BIN --headless --path "$GITHUB_WORKSPACE" --import --quit
 
       - name: Export debug APK
         env:
-          GODOT_ANDROID_KEYSTORE_DEBUG_PATH: /root/debug.keystore
+          GODOT_ANDROID_KEYSTORE_DEBUG_PATH: ${{ github.workspace }}/debug.keystore
           GODOT_ANDROID_KEYSTORE_DEBUG_USER: androiddebugkey
           GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD: android
+        shell: bash
         run: |
+          set -euxo pipefail
+          keytool -genkeypair -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Forge Chance,C=KR"
           mkdir -p build
-          godot --headless --verbose --path "$GITHUB_WORKSPACE" --export-debug "Android Debug" build/forge-chance-v0.3.apk
+          "$GODOT_BIN" --headless --verbose --path "$GITHUB_WORKSPACE" --export-debug "Android Debug" build/forge-chance-v0.3.apk
           test -s build/forge-chance-v0.3.apk
           "$ANDROID_HOME/build-tools/35.0.1/apksigner" verify build/forge-chance-v0.3.apk
           ls -lh build/forge-chance-v0.3.apk
