@@ -90,7 +90,9 @@ jobs:
             adb install -r build/forge-chance-sim.apk
             adb shell wm size 1080x1920
             adb shell monkey -p com.rudung.forgechance 1
-            sleep 5
+            sleep 4
+            adb shell input tap 806 430
+            sleep 2
             adb exec-out screencap -p > runtime-test/00_before.png
             adb logcat -c
             adb shell input tap 520 1250
@@ -103,10 +105,7 @@ jobs:
             adb logcat -d -v time > runtime-test/logcat.txt
             adb shell pidof com.rudung.forgechance > runtime-test/pid.txt
             test -s runtime-test/pid.txt
-            if grep -E "SCRIPT ERROR|FATAL EXCEPTION|ANR in com.rudung.forgechance|Process com.rudung.forgechance has died" runtime-test/logcat.txt; then
-              echo "Runtime failure detected"
-              exit 1
-            fi
+            ! grep -Eq "SCRIPT ERROR|FATAL EXCEPTION|ANR in com.rudung.forgechance|Process com.rudung.forgechance has died" runtime-test/logcat.txt
             sha256sum runtime-test/*.png > runtime-test/screenshots.sha256
             cat runtime-test/screenshots.sha256
 
