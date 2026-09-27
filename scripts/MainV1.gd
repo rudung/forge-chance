@@ -502,7 +502,7 @@ func _on_enhance_pressed() -> void:
     if lv >= MAX_LEVEL:
         _flash("+20 장비는 졸업했습니다.")
         return
-    var cost := ENHANCE_COST[lv]
+    var cost: int = int(ENHANCE_COST[lv])
     if gold < cost:
         _flash("골드가 부족합니다. 필요 %sG" % _fmt(cost))
         return
@@ -544,7 +544,7 @@ func _confirm_coin_use() -> void:
     if lv >= MAX_LEVEL:
         modal_overlay.visible = false
         return
-    var cost := ENHANCE_COST[lv]
+    var cost: int = int(ENHANCE_COST[lv])
     if gold < cost:
         modal_overlay.visible = false
         _flash("행운의 동전도 강화비 %sG가 필요합니다." % _fmt(cost))
@@ -770,7 +770,7 @@ func _refresh_selected_item() -> void:
     item_icon.texture = load("res://assets/%s.svg" % SLOT_ICON_FILES[selected_slot])
     item_icon.modulate = Color.WHITE
 
-    var base_gps := GPS_BY_LEVEL[lv]
+    var base_gps: int = int(GPS_BY_LEVEL[lv])
     var synergy := _class_synergy_bonus(cname)
     info_current_label.text = "선택 장비\n+%s G/s" % _fmt(base_gps)
     info_synergy_label.text = "%s 시너지\n+%d%%" % [cname, int(round(synergy * 100.0))]
@@ -780,7 +780,7 @@ func _refresh_selected_item() -> void:
         levels[cname][selected_slot] = lv + 1
         var next_total := _total_gps()
         levels[cname][selected_slot] = lv
-        var gain := max(0.0, next_total - current_total)
+        var gain: float = maxf(0.0, next_total - current_total)
         info_success_label.text = "계정 수입\n+%s G/s 증가" % _fmt(round(gain))
         var row = ENHANCE_TABLE[lv]
         probability_label.text = "성공 %d%% · 유지 %d%%\n하락 %d%% · 파괴 %d%%" % [row[0], row[1], row[2], row[3]]
@@ -984,7 +984,7 @@ func _load_game() -> void:
 
     _check_achievements()
     var last_saved := float(parsed.get("last_saved_unix", Time.get_unix_time_from_system()))
-    var offline_seconds := clamp(Time.get_unix_time_from_system() - last_saved, 0.0, MAX_OFFLINE_SECONDS)
+    var offline_seconds: float = clampf(Time.get_unix_time_from_system() - last_saved, 0.0, MAX_OFFLINE_SECONDS)
     if offline_seconds > 2.0:
         last_offline_gain = _total_gps() * offline_seconds
         gold += last_offline_gain
