@@ -628,7 +628,6 @@ func _begin_coin_enhancement() -> void:
     coin_button.release_focus()
     _refresh_interaction_state()
     result_panel.visible = false
-    result_hold = 0.0
     sequence_kind = "coin"
     sequence_elapsed = 0.0
     status_label.text = "행운의 동전이 모루 위로 떠오릅니다..."
