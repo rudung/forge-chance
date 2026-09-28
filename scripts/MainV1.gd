@@ -427,14 +427,18 @@ func _build_result_panel() -> void:
     _place(result_detail, 16, 160, 498, 86)
     result_panel.add_child(result_detail)
 
+    # Hotfix: OK is exactly on top of the normal enhancement button.
+    # Repeated taps on one spot alternate Enhance -> OK -> Enhance.
     result_ok_button = Button.new()
     result_ok_button.text = "OK"
-    result_ok_button.add_theme_font_size_override("font_size", 34)
+    result_ok_button.add_theme_font_size_override("font_size", 43)
     result_ok_button.focus_mode = Control.FOCUS_NONE
-    _place(result_ok_button, 135, 292, 260, 82)
+    result_ok_button.visible = false
+    result_ok_button.z_index = 100
+    _place(result_ok_button, 245, 1170, 550, 168)
     result_ok_button.pressed.connect(_dismiss_result)
-    result_panel.add_child(result_ok_button)
-    _style_small_button(result_ok_button, true)
+    main_layer.add_child(result_ok_button)
+    _style_enhance_button(result_ok_button)
 
 func _build_coin_modal() -> void:
     modal_overlay = ColorRect.new()
@@ -612,14 +616,22 @@ func _begin_normal_enhancement() -> void:
     coin_button.release_focus()
     _refresh_interaction_state()
     result_panel.visible = false
-    sequence_kind = "normal"
+    result_ok_button.visible = false
     sequence_elapsed = 0.0
     sequence_duration = _enhance_duration(_selected_level())
+    print("ENHANCE_START level=", _selected_level(), " duration=", sequence_duration)
+
+    if sequence_duration <= 0.0:
+        sequence_kind = ""
+        progress_bar.visible = false
+        _apply_and_show_result(false)
+        return
+
+    sequence_kind = "normal"
     status_label.text = "빛나는 기운이 장비로 모여듭니다..."
     fx.set_mode("charging")
     progress_bar.visible = true
     progress_bar.value = 0.0
-    print("ENHANCE_START level=", _selected_level(), " duration=", sequence_duration)
 
 func _begin_coin_enhancement() -> void:
     busy = true
@@ -628,6 +640,7 @@ func _begin_coin_enhancement() -> void:
     coin_button.release_focus()
     _refresh_interaction_state()
     result_panel.visible = false
+    result_ok_button.visible = false
     sequence_kind = "coin"
     sequence_elapsed = 0.0
     status_label.text = "행운의 동전이 모루 위로 떠오릅니다..."
@@ -694,6 +707,7 @@ func _dismiss_result() -> void:
     if not result_panel.visible:
         return
     result_panel.visible = false
+    result_ok_button.visible = false
     fx.set_mode("idle")
     status_label.text = ""
     busy = false
@@ -703,12 +717,12 @@ func _dismiss_result() -> void:
 
 func _enhance_duration(level: int) -> float:
     if level <= 5:
-        return 0.5
+        return 0.0
     if level <= 10:
-        return 1.5
+        return 0.2
     if level <= 15:
-        return 2.5
-    return 3.5
+        return 0.5
+    return 1.0
 
 func _resolve_pending_immediately() -> void:
     var c := clampi(pending_class, 0, CLASSES.size() - 1)
@@ -747,6 +761,7 @@ func _show_result(title: String, detail: String, mode: String) -> void:
             result_title.add_theme_color_override("font_color", Color("ff5548"))
             result_detail.add_theme_color_override("font_color", Color("ffb0a9"))
     result_panel.visible = true
+    result_ok_button.visible = true
 
 func _screen_shake() -> void:
     var base := main_layer.position
@@ -972,7 +987,7 @@ func _flash(message: String) -> void:
 
 func _save_game() -> void:
     var data := {
-        "version": 11,
+        "version": 12,
         "gold": gold,
         "levels": levels,
         "selected_class": selected_class,
