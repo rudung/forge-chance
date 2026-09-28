@@ -95,16 +95,27 @@ jobs:
             sleep 2
             adb exec-out screencap -p > runtime-test/00_before.png
             adb logcat -c
+
+            # +0 enhancement: v1.1 target duration 0.5s.
             adb shell input tap 520 1250
             sleep 1
-            adb exec-out screencap -p > runtime-test/01_after_1s.png
-            sleep 3
-            adb exec-out screencap -p > runtime-test/02_after_4s.png
+            adb exec-out screencap -p > runtime-test/01_result_persistent.png
+
+            # Result must remain until OK.
             sleep 2
-            adb exec-out screencap -p > runtime-test/03_after_6s.png
+            adb exec-out screencap -p > runtime-test/02_result_still_visible.png
+
+            # Press result OK and verify app remains alive/interactable.
+            adb shell input tap 540 835
+            sleep 1
+            adb exec-out screencap -p > runtime-test/03_after_ok.png
+
             adb logcat -d -v time > runtime-test/logcat.txt
             adb shell pidof com.rudung.forgechance > runtime-test/pid.txt
             test -s runtime-test/pid.txt
+            grep -q "ENHANCE_START level=0 duration=0.5" runtime-test/logcat.txt
+            grep -q "ENHANCE_RESULT" runtime-test/logcat.txt
+            grep -q "ENHANCE_DONE" runtime-test/logcat.txt
             ! grep -Eq "SCRIPT ERROR|FATAL EXCEPTION|ANR in com.rudung.forgechance|Process com.rudung.forgechance has died" runtime-test/logcat.txt
             sha256sum runtime-test/*.png > runtime-test/screenshots.sha256
             cat runtime-test/screenshots.sha256
