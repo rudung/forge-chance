@@ -96,26 +96,28 @@ jobs:
             adb exec-out screencap -p > runtime-test/00_before.png
             adb logcat -c
 
-            # +0 enhancement: v1.1 target duration 0.5s.
+            # Tap 1 at enhancement-button center: +0~+5 is instant.
             adb shell input tap 520 1250
-            sleep 1
-            adb exec-out screencap -p > runtime-test/01_result_persistent.png
+            sleep 0.3
+            adb exec-out screencap -p > runtime-test/01_instant_result.png
 
-            # Result must remain until OK.
-            sleep 2
-            adb exec-out screencap -p > runtime-test/02_result_still_visible.png
+            # Tap 2 at exact same coordinate: OK closes result.
+            adb shell input tap 520 1250
+            sleep 0.3
+            adb exec-out screencap -p > runtime-test/02_after_same_spot_ok.png
 
-            # Press result OK and verify app remains alive/interactable.
-            adb shell input tap 540 835
-            sleep 1
-            adb exec-out screencap -p > runtime-test/03_after_ok.png
+            # Tap 3 at exact same coordinate: next enhancement starts immediately.
+            adb shell input tap 520 1250
+            sleep 0.3
+            adb exec-out screencap -p > runtime-test/03_second_result.png
 
             adb logcat -d -v time > runtime-test/logcat.txt
             adb shell pidof com.rudung.forgechance > runtime-test/pid.txt
             test -s runtime-test/pid.txt
-            grep -q "ENHANCE_START level=0 duration=0.5" runtime-test/logcat.txt
+            grep -q "ENHANCE_START level=0 duration=0" runtime-test/logcat.txt
             grep -q "ENHANCE_RESULT" runtime-test/logcat.txt
             grep -q "ENHANCE_DONE" runtime-test/logcat.txt
+            test "$(grep -c "ENHANCE_RESULT" runtime-test/logcat.txt)" -ge 2
             ! grep -Eq "SCRIPT ERROR|FATAL EXCEPTION|ANR in com.rudung.forgechance|Process com.rudung.forgechance has died" runtime-test/logcat.txt
             sha256sum runtime-test/*.png > runtime-test/screenshots.sha256
             cat runtime-test/screenshots.sha256
