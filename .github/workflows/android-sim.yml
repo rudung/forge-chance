@@ -96,7 +96,7 @@ jobs:
             adb exec-out screencap -p > runtime-test/00_before.png
             adb logcat -c
 
-            # Tap 1 at enhancement-button center: +0~+5 is instant.
+            # Tap 1 at enhancement-button center: +0~+10 is instant.
             adb shell input tap 520 1250
             sleep 0.3
             adb exec-out screencap -p > runtime-test/01_instant_result.png
