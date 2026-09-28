@@ -17,10 +17,10 @@ const ITEM_NAMES := {
 }
 
 const ENHANCE_TABLE := [
-    [80,20,0,0],[76,24,0,0],[72,28,0,0],[68,32,0,0],[64,36,0,0],
-    [60,30,10,0],[56,29,15,0],[52,28,20,0],[48,27,25,0],[44,26,25,5],
-    [40,28,26,6],[36,29,28,7],[32,30,30,8],[28,31,32,9],[24,32,34,10],
-    [20,33,36,11],[16,34,38,12],[12,35,40,13],[8,38,40,14],[5,40,40,15]
+    [80.0,20.0,0.0,0.0],[76.0,24.0,0.0,0.0],[72.0,28.0,0.0,0.0],[68.0,32.0,0.0,0.0],[64.0,36.0,0.0,0.0],
+    [60.0,30.0,10.0,0.0],[56.0,29.0,15.0,0.0],[52.0,28.0,20.0,0.0],[48.0,27.0,25.0,0.0],[44.0,29.5,25.0,1.5],
+    [40.0,32.0,26.0,2.0],[36.0,33.5,28.0,2.5],[32.0,35.0,30.0,3.0],[28.0,36.5,32.0,3.5],[24.0,38.0,34.0,4.0],
+    [20.0,39.5,36.0,4.5],[16.0,41.0,38.0,5.0],[12.0,42.5,40.0,5.5],[8.0,46.0,40.0,6.0],[5.0,48.5,40.0,6.5]
 ]
 
 const GPS_BY_LEVEL := [1,2,3,4,5,7,10,14,20,28,40,58,82,115,160,225,315,440,620,880,1250]
@@ -599,14 +599,14 @@ func _confirm_coin_use() -> void:
 
 func _roll_normal_result(level: int) -> String:
     var row = ENHANCE_TABLE[level]
-    var r := rng.randi_range(1,100)
-    if r <= row[0]:
+    var r: float = rng.randf() * 100.0
+    if r < float(row[0]):
         return "success"
-    r -= row[0]
-    if r <= row[1]:
+    r -= float(row[0])
+    if r < float(row[1]):
         return "stay"
-    r -= row[1]
-    if r <= row[2]:
+    r -= float(row[1])
+    if r < float(row[2]):
         return "down"
     return "destroy"
 
@@ -716,13 +716,11 @@ func _dismiss_result() -> void:
     print("ENHANCE_DONE level=", _selected_level(), " busy=", busy)
 
 func _enhance_duration(level: int) -> float:
-    if level <= 5:
-        return 0.0
     if level <= 10:
-        return 0.2
-    if level <= 15:
-        return 0.5
-    return 1.0
+        return 0.0
+    if level <= 14:
+        return 0.3
+    return 0.5
 
 func _resolve_pending_immediately() -> void:
     var c := clampi(pending_class, 0, CLASSES.size() - 1)
@@ -845,7 +843,7 @@ func _refresh_selected_item() -> void:
         var gain: float = maxf(0.0, next_total - current_total)
         info_success_label.text = "계정 수입\n+%s G/s 증가" % _fmt(round(gain))
         var row = ENHANCE_TABLE[lv]
-        probability_label.text = "성공 %d%% · 유지 %d%%\n하락 %d%% · 파괴 %d%%" % [row[0], row[1], row[2], row[3]]
+        probability_label.text = "성공 %s%% · 유지 %s%%\n하락 %s%% · 파괴 %s%%" % [_fmt_pct(row[0]), _fmt_pct(row[1]), _fmt_pct(row[2]), _fmt_pct(row[3])]
         stage_label.text = "+%d  ▶  +%d" % [lv, lv + 1]
     else:
         info_success_label.text = "최종 강화 완료\n+20 졸업 장비"
@@ -987,7 +985,7 @@ func _flash(message: String) -> void:
 
 func _save_game() -> void:
     var data := {
-        "version": 12,
+        "version": 13,
         "gold": gold,
         "levels": levels,
         "selected_class": selected_class,
@@ -1064,6 +1062,12 @@ func _migrate_v03_equipment(parsed: Dictionary) -> void:
             var key: String = old_slots[i]
             if cdata.has(key) and cdata[key] != null and typeof(cdata[key]) == TYPE_DICTIONARY:
                 levels[cname][i] = clampi(int(cdata[key].get("level", 0)), 0, MAX_LEVEL)
+
+func _fmt_pct(value) -> String:
+    var v := float(value)
+    if is_equal_approx(v, round(v)):
+        return str(int(round(v)))
+    return "%.1f" % v
 
 func _fmt(value) -> String:
     var n := int(round(float(value)))
