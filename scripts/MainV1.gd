@@ -69,7 +69,7 @@ var save_accumulator := 0.0
 var last_offline_gain := 0.0
 var sequence_kind := ""
 var sequence_elapsed := 0.0
-var result_hold := 0.0
+var sequence_duration := 0.0
 
 var main_layer: Control
 var background: TextureRect
@@ -96,6 +96,7 @@ var fx: Control
 var result_panel: Panel
 var result_title: Label
 var result_detail: Label
+var result_ok_button: Button
 var modal_overlay: ColorRect
 var coin_modal: Panel
 var achievements_screen: Control
@@ -118,8 +119,9 @@ func _process(delta: float) -> void:
         sequence_elapsed += delta
         if sequence_kind == "normal":
             progress_bar.visible = true
-            progress_bar.value = minf(100.0, sequence_elapsed / 4.0 * 100.0)
-            if sequence_elapsed >= 4.0:
+            var duration := maxf(sequence_duration, 0.01)
+            progress_bar.value = minf(100.0, sequence_elapsed / duration * 100.0)
+            if sequence_elapsed >= duration:
                 sequence_kind = ""
                 progress_bar.visible = false
                 _apply_and_show_result(false)
@@ -128,19 +130,8 @@ func _process(delta: float) -> void:
                 sequence_kind = ""
                 _apply_and_show_result(true)
 
-    if result_hold > 0.0:
-        result_hold -= delta
-        if result_hold <= 0.0:
-            result_panel.visible = false
-            fx.set_mode("idle")
-            status_label.text = ""
-            busy = false
-            _refresh_all()
-            _save_game()
-            print("ENHANCE_DONE level=", _selected_level(), " busy=", busy)
-
-    if not busy:
-        gold += _total_gps() * delta
+    # Passive income must continue during enhancement/result presentation.
+    gold += _total_gps() * delta
 
     passive_fraction += delta
     if passive_fraction >= 0.10:
@@ -424,15 +415,26 @@ func _build_bottom_nav() -> void:
     _style_nav(achievement_nav_button, false)
 
 func _build_result_panel() -> void:
-    result_panel = _panel(Rect2(275, 520, 530, 350), Color(0.02,0.015,0.012,0.96), Color("b76d31"), 5)
+    result_panel = _panel(Rect2(275, 500, 530, 420), Color(0.02,0.015,0.012,0.96), Color("b76d31"), 5)
     result_panel.visible = false
     main_layer.add_child(result_panel)
+
     result_title = _label("", 54, Color.WHITE, HORIZONTAL_ALIGNMENT_CENTER)
-    _place(result_title, 16, 72, 498, 80)
+    _place(result_title, 16, 58, 498, 80)
     result_panel.add_child(result_title)
+
     result_detail = _label("", 38, Color("ffe3a5"), HORIZONTAL_ALIGNMENT_CENTER)
-    _place(result_detail, 16, 175, 498, 86)
+    _place(result_detail, 16, 160, 498, 86)
     result_panel.add_child(result_detail)
+
+    result_ok_button = Button.new()
+    result_ok_button.text = "OK"
+    result_ok_button.add_theme_font_size_override("font_size", 34)
+    result_ok_button.focus_mode = Control.FOCUS_NONE
+    _place(result_ok_button, 135, 292, 260, 82)
+    result_ok_button.pressed.connect(_dismiss_result)
+    result_panel.add_child(result_ok_button)
+    _style_small_button(result_ok_button, true)
 
 func _build_coin_modal() -> void:
     modal_overlay = ColorRect.new()
@@ -606,18 +608,18 @@ func _roll_normal_result(level: int) -> String:
 
 func _begin_normal_enhancement() -> void:
     busy = true
-    print("ENHANCE_START normal class=", CLASSES[selected_class], " slot=", SLOTS[selected_slot], " level=", _selected_level())
     enhance_button.release_focus()
     coin_button.release_focus()
     _refresh_interaction_state()
     result_panel.visible = false
-    result_hold = 0.0
     sequence_kind = "normal"
     sequence_elapsed = 0.0
+    sequence_duration = _enhance_duration(_selected_level())
     status_label.text = "빛나는 기운이 장비로 모여듭니다..."
     fx.set_mode("charging")
     progress_bar.visible = true
     progress_bar.value = 0.0
+    print("ENHANCE_START level=", _selected_level(), " duration=", sequence_duration)
 
 func _begin_coin_enhancement() -> void:
     busy = true
@@ -689,7 +691,25 @@ func _apply_and_show_result(is_coin: bool) -> void:
     print("ENHANCE_RESULT mode=", mode, " old=", old_level, " new=", new_level)
     if mode == "destroy":
         _screen_shake()
-    result_hold = 1.9 if is_coin else 1.65
+func _dismiss_result() -> void:
+    if not result_panel.visible:
+        return
+    result_panel.visible = false
+    fx.set_mode("idle")
+    status_label.text = ""
+    busy = false
+    _refresh_all()
+    _save_game()
+    print("ENHANCE_DONE level=", _selected_level(), " busy=", busy)
+
+func _enhance_duration(level: int) -> float:
+    if level <= 5:
+        return 0.5
+    if level <= 10:
+        return 1.5
+    if level <= 15:
+        return 2.5
+    return 3.5
 
 func _resolve_pending_immediately() -> void:
     var c := clampi(pending_class, 0, CLASSES.size() - 1)
@@ -953,7 +973,7 @@ func _flash(message: String) -> void:
 
 func _save_game() -> void:
     var data := {
-        "version": 10,
+        "version": 11,
         "gold": gold,
         "levels": levels,
         "selected_class": selected_class,
