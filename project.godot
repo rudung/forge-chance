@@ -3,7 +3,7 @@
 config_version=5
 
 [application]
-config/name="강화 대장간 v1.1"
+config/name="강화 대장간 v1.1.1"
 run/main_scene="res://Main.tscn"
 config/features=PackedStringArray("4.6", "GL Compatibility")\nconfig/icon="res://assets/coin.svg"
 
