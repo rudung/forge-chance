@@ -89,10 +89,12 @@ jobs:
             mkdir -p runtime-test
             adb install -r build/forge-chance-sim.apk
             adb shell wm size 1080x1920
-            adb shell monkey -p com.rudung.forgechance 1
+            adb shell am force-stop com.rudung.forgechance
+            adb shell am start -W -a android.intent.action.MAIN -c android.intent.category.LAUNCHER -p com.rudung.forgechance
             sleep 4
             adb shell input tap 925 500
             sleep 2
+            adb shell pidof com.rudung.forgechance
             adb exec-out screencap -p > runtime-test/00_before.png
             adb logcat -c
 
